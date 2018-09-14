@@ -4,6 +4,33 @@ SELECTOR_VIDEO equ (0x0003<<3) + TI_GDT + RPL0
 
 [bits 32]
 section .text
+;--------------------------------------------
+;put_str 通过put_char来打印以0字符结尾的字符串
+;--------------------------------------------
+;输入：栈中参数为打印的字符串
+;输出：无
+
+global put_str
+put_str:
+;由于本函数中只用到了ebx和ecx,只备份这两个寄存器
+   push ebx
+   push ecx
+   xor ecx, ecx		      ; 准备用ecx存储参数,清空
+   mov ebx, [esp + 12]	      ; 从栈中得到待打印的字符串地址 
+.goon:
+   mov cl, [ebx]
+   cmp cl, 0		      ; 如果处理到了字符串尾,跳到结束处返回
+   jz .str_over
+   push ecx		      ; 为put_char函数传递参数
+   call put_char
+   add esp, 4		      ; 回收参数所占的栈空间
+   inc ebx		      ; 使ebx指向下一个字符
+   jmp .goon
+.str_over:
+   pop ecx
+   pop ebx
+   ret
+
 ;------------------------   put_char   -----------------------------
 ;功能描述:把栈中的1个字符写入光标所在处
 ;-------------------------------------------------------------------   
@@ -78,7 +105,7 @@ put_char:
    sub bx, dx				  ; 光标值减去除80的余数便是取整
 					  ; 以上4行处理\r的代码
 
- .is_carriage_return_end:		  ; 回车符CR处理结束
+ .is_carriage_return_end:                 ; 回车符CR处理结束
    add bx, 80
    cmp bx, 2000
  .is_line_feed_end:			  ; 若是LF(\n),将光标移+80便可。  
@@ -94,9 +121,9 @@ put_char:
 
 ;;;;;;;将最后一行填充为空白
    mov ebx, 3840			  ; 最后一行首字符的第一个字节偏移= 1920 * 2
-   mov ecx, 80				  ;一行是80字符(160字节),每次清空1字符(2字节),一行需要移动80次
+   mov ecx, 80                            ;一行是80字符(160字节),每次清空1字符(2字节),一行需要移动80次
  .cls:
-   mov word [gs:ebx], 0x0720		  ;0x0720是黑底白字的空格键
+   mov word [gs:ebx], 0x0720              ;0x0720是黑底白字的空格键
    add ebx, 2
    loop .cls 
    mov bx,1920				  ;将光标值重置为1920,最后一行的首字符.
