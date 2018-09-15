@@ -5,9 +5,9 @@ CC = gcc
 LD = ld
 LIB = -I lib/ -I lib/kernel/ -I lib/user/ -I kernel/ -I device/
 ASFLAGS = -f elf
-CFLAGS = -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes \
+CFLAGS = -Wall $(LIB) -m32 -c -fno-builtin -fno-stack-protector -W -Wstrict-prototypes \
          -Wmissing-prototypes 
-LDFLAGS = -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
+LDFLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main -Map $(BUILD_DIR)/kernel.map
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
       $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o \
       $(BUILD_DIR)/debug.o
@@ -49,8 +49,8 @@ mk_dir:
 	if [[ ! -d $(BUILD_DIR) ]];then mkdir $(BUILD_DIR);fi
 
 hd:
-	dd if=$(BUILD_DIR)/kernel.bin \
-           of=/home/work/my_workspace/bochs/hd60M.img \
+	dd if=/home/yun/YunOS/YunOS/src/build/kernel.bin \
+           of=/usr/local/bin/yunos.img \
            bs=512 count=200 seek=9 conv=notrunc
 
 clean:

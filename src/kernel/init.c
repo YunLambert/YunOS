@@ -1,7 +1,7 @@
 #include "init.h"
 #include "print.h"
 #include "interrupt.h"
-#include "../device/timer.h"		  // 用相对路径演示头文件包含
+#include "timer.h"
 
 /*负责初始化所有模块 */
 void init_all() {
