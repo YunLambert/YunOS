@@ -2,7 +2,7 @@
 #include "io.h"
 #include "print.h"
 #include "interrupt.h"
-#include "../thread/thread.h"
+#include "thread.h"
 #include "debug.h"
 
 #define IRQ0_FREQUENCY	   100
