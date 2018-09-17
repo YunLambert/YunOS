@@ -25,7 +25,7 @@ int main(void) {
    //    console_put_str("Main ");
    //};
 
-   put_str("Input:");
+   put_str("[YunOS@localhost]$");
    while(1);
    return 0;
 }

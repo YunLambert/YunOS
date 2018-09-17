@@ -3,6 +3,7 @@
 #include "interrupt.h"
 #include "io.h"
 #include "global.h"
+#include "ioqueue.h"
 
 #define KBD_BUF_PORT 0x60	 // 键盘buffer寄存器端口号为0x60
 
@@ -33,6 +34,8 @@
 #define ctrl_r_make  	0xe01d
 #define ctrl_r_break 	0xe09d
 #define caps_lock_make 	0x3a
+
+struct ioqueue kbd_buf;	   // 定义键盘缓冲区
 
 /* 定义以下变量记录相应键是否按下的状态,
  * ext_scancode用于记录makecode是否以0xe0开头 */
@@ -185,10 +188,25 @@ static void intr_keyboard_handler(void) {
 
       uint8_t index = (scancode &= 0x00ff);  // 将扫描码的高字节置0,主要是针对高字节是e0的扫描码.
       char cur_char = keymap[index][shift];  // 在数组中找到对应的字符
-   
-      /* 只处理ascii码不为0的键 */
+
+   /* 如果cur_char不为0,也就是ascii码为除'\0'外的字符就加入键盘缓冲区中 */
       if (cur_char) {
-	 put_char(cur_char);
+
+     /*****************  快捷键ctrl+l和ctrl+u的处理 *********************
+      * 下面是把ctrl+l和ctrl+u这两种组合键产生的字符置为:
+      * cur_char的asc码-字符a的asc码, 此差值比较小,
+      * 属于asc码表中不可见的字符部分.故不会产生可见字符.
+      * 我们在shell中将ascii值为l-a和u-a的分别处理为清屏和删除输入的快捷键*/
+	 if ((ctrl_down_last && cur_char == 'l') || (ctrl_down_last && cur_char == 'u')) {
+	    cur_char -= 'a';
+	 }
+      /****************************************************************/
+      
+   /* 若kbd_buf中未满并且待加入的cur_char不为0,
+    * 则将其加入到缓冲区kbd_buf中 */
+	 if (!ioq_full(&kbd_buf)) {
+	    ioq_putchar(&kbd_buf, cur_char);
+	 }
 	 return;
       }
 
@@ -212,6 +230,7 @@ static void intr_keyboard_handler(void) {
 /* 键盘初始化 */
 void keyboard_init() {
    put_str("keyboard init start\n");
+   ioqueue_init(&kbd_buf);
    register_handler(0x21, intr_keyboard_handler);
    put_str("keyboard init done\n");
 }
