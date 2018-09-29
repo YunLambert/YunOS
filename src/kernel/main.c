@@ -18,10 +18,12 @@ int main(void) {
    put_str("This is YunOS System,Checking...\n");
    init_all();
 
+/*
    void* addr = get_kernel_pages(3);
    put_str("\n get_kernel_page start vaddr is ");
    put_int((uint32_t)addr);
    put_str("\n");
+*/
    intr_enable();	// 打开中断,使时钟中断起作用
    process_execute(u_prog_a, "u_prog_a");
    process_execute(u_prog_b, "u_prog_b");
@@ -32,7 +34,7 @@ int main(void) {
    //    console_put_str("Main ");
    //};
 
-   put_str("[YunOS@localhost]$");
+   put_str("[YunOS@localhost]$ \n");
    while(1);
    return 0;
 }
