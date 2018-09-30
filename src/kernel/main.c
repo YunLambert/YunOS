@@ -8,6 +8,7 @@
 #include "syscall-init.h"
 #include "syscall.h"
 #include "stdio.h"
+#include "fs.h"
 
 void k_thread_a(void*);
 void k_thread_b(void*);
@@ -25,14 +26,23 @@ int main(void) {
    put_str("\n");
 */
    intr_enable();	// 打开中断,使时钟中断起作用
-   process_execute(u_prog_a, "u_prog_a");
-   process_execute(u_prog_b, "u_prog_b");
-   thread_start("k_thread_a", 31, k_thread_a, "I am thread_a");
-   thread_start("k_thread_b", 31, k_thread_b, "I am thread_b");
+   //process_execute(u_prog_a, "u_prog_a");
+   //process_execute(u_prog_b, "u_prog_b");
+   //thread_start("k_thread_a", 31, k_thread_a, "I am thread_a");
+   //thread_start("k_thread_b", 31, k_thread_b, "I am thread_b");
    
    //while(1) {
    //    console_put_str("Main ");
    //};
+   struct stat obj_stat;
+   sys_stat("/", &obj_stat);
+   printf("/`s info\n   i_no:%d\n   size:%d\n   filetype:%s\n", \
+	 obj_stat.st_ino, obj_stat.st_size, \
+	 obj_stat.st_filetype == 2 ? "directory" : "regular");
+   sys_stat("/dir1", &obj_stat);
+   printf("/dir1`s info\n   i_no:%d\n   size:%d\n   filetype:%s\n", \
+	 obj_stat.st_ino, obj_stat.st_size, \
+	 obj_stat.st_filetype == 2 ? "directory" : "regular");
 
    put_str("[YunOS@localhost]$ \n");
    while(1);

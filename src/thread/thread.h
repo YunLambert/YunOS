@@ -5,6 +5,7 @@
 #include "bitmap.h"
 #include "memory.h"
 
+#define MAX_FILES_OPEN_PER_PROC 8
 /* 自定义通用函数类型,它将在很多线程函数中做为形参类型 */
 typedef void thread_func(void*);
 typedef int16_t pid_t;
@@ -81,24 +82,20 @@ struct task_struct {
    char name[16];
    uint8_t priority;
    uint8_t ticks;	   // 每次在处理器上执行的时间嘀嗒数
-
 /* 此任务自上cpu运行后至今占用了多少cpu嘀嗒数,
  * 也就是此任务执行了多久*/
    uint32_t elapsed_ticks;
-
 /* general_tag的作用是用于线程在一般的队列中的结点 */
    struct list_elem general_tag;				    
-
 /* all_list_tag的作用是用于线程队列thread_all_list中的结点 */
    struct list_elem all_list_tag;
-
    uint32_t* pgdir;              // 进程自己页表的虚拟地址
    struct virtual_addr userprog_vaddr;   // 用户进程的虚拟地址
    struct mem_block_desc u_block_desc[DESC_CNT];   // 用户进程内存块描述符
-
+   int32_t fd_table[MAX_FILES_OPEN_PER_PROC];	// 已打开文件数组
+   uint32_t cwd_inode_nr;	 // 进程所在的工作目录的inode编号
    uint32_t stack_magic;	 // 用这串数字做栈的边界标记,用于检测栈的溢出
 };
-
 
 extern struct list thread_ready_list;
 extern struct list thread_all_list;
