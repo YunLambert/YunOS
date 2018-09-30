@@ -1,5 +1,4 @@
 #include "syscall.h"
-#include "thread.h"
 
 /* 无参数的系统调用 */
 #define _syscall0(NUMBER) ({				       \
@@ -157,4 +156,34 @@ int32_t chdir(const char* path) {
 /* 显示任务列表 */
 void ps(void) {
    _syscall0(SYS_PS);
+}
+
+/* 执行pathname */
+int32_t execv(const char* pathname, char** argv) {
+   return _syscall2(SYS_EXECV, pathname, argv);
+}
+
+/* 以状态status退出 */
+void exit(int32_t status) {
+   _syscall1(SYS_EXIT, status);
+}
+
+/* 等待子进程,子进程状态存储到status */
+pid_t wait(int32_t* status) {
+   return _syscall1(SYS_WAIT, status);
+}
+
+/* 生成管道,pipefd[0]负责读入管道,pipefd[1]负责写入管道 */
+int32_t pipe(int32_t pipefd[2]) {
+   return _syscall1(SYS_PIPE, pipefd);
+}
+
+/* 将文件描述符old_local_fd重定向到new_local_fd */
+void fd_redirect(uint32_t old_local_fd, uint32_t new_local_fd) {
+   _syscall2(SYS_FD_REDIRECT, old_local_fd, new_local_fd);
+}
+
+/* 显示系统支持的命令 */
+void help(void) {
+   _syscall0(SYS_HELP);
 }

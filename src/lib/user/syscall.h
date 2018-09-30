@@ -2,6 +2,7 @@
 #define __LIB_USER_SYSCALL_H
 #include "stdint.h"
 #include "fs.h"
+#include "thread.h"
 
 enum SYSCALL_NR {
    SYS_GETPID,
@@ -25,7 +26,13 @@ enum SYSCALL_NR {
    SYS_READDIR,
    SYS_REWINDDIR,
    SYS_STAT,
-   SYS_PS
+   SYS_PS,
+   SYS_EXECV,
+   SYS_EXIT,
+   SYS_WAIT,
+   SYS_PIPE,
+   SYS_FD_REDIRECT,
+   SYS_HELP
 };
 uint32_t getpid(void);
 uint32_t write(int32_t fd, const void* buf, uint32_t count);
@@ -49,5 +56,10 @@ void rewinddir(struct dir* dir);
 int32_t stat(const char* path, struct stat* buf);
 int32_t chdir(const char* path);
 void ps(void);
+int32_t execv(const char* pathname, char** argv);
+void exit(int32_t status);
+pid_t wait(int32_t* status);
+int32_t pipe(int32_t pipefd[2]);
+void fd_redirect(uint32_t old_local_fd, uint32_t new_local_fd);
+void help(void);
 #endif
-

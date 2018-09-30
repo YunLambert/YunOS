@@ -9,6 +9,7 @@
 #include "string.h"
 #include "thread.h"
 #include "global.h"
+#include "ioqueue.h"
 
 #define DEFAULT_SECS 1
 
