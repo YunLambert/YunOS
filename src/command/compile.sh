@@ -1,5 +1,5 @@
 ####  此脚本应该在command目录下执行
-
+#!/bin/bash
 if [[ ! -d "../lib" || ! -d "../build" ]];then
    echo "dependent dir don\`t exist!"
    cwd=$(pwd)
@@ -12,8 +12,8 @@ if [[ ! -d "../lib" || ! -d "../build" ]];then
 fi
 
 BIN="cat"
-CFLAGS="-Wall -c -fno-builtin -W -Wstrict-prototypes \
-      -Wmissing-prototypes -Wsystem-headers"
+CFLAGS="-Wall -m32 -c -fno-builtin -fno-stack-protector -W -Wstrict-prototypes \
+         -Wmissing-prototypes  -Wsystem-headers"
 LIBS="-I ../lib/ -I ../lib/kernel/ -I ../lib/user/ -I \
       ../kernel/ -I ../device/ -I ../thread/ -I \
       ../userprog/ -I ../fs/ -I ../shell/"
@@ -25,7 +25,7 @@ DD_OUT="/usr/local/bin/yunos.img"
 nasm -f elf ./start.S -o ./start.o
 ar rcs simple_crt.a $OBJS start.o
 gcc $CFLAGS $LIBS -o $BIN".o" $BIN".c"
-ld $BIN".o" simple_crt.a -o $BIN
+ld -m elf_i386 $BIN".o" simple_crt.a -o $BIN
 SEC_CNT=$(ls -l $BIN|awk '{printf("%d", ($5+511)/512)}')
 
 if [[ -f $BIN ]];then
