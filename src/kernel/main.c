@@ -1,6 +1,5 @@
 #include "print.h"
 #include "init.h"
-#include "memory.h"
 #include "thread.h"
 #include "interrupt.h"
 #include "console.h"
@@ -8,7 +7,11 @@
 #include "syscall-init.h"
 #include "syscall.h"
 #include "stdio.h"
+#include "memory.h"
+#include "dir.h"
 #include "fs.h"
+#include "assert.h"
+#include "shell.h"
 
 void k_thread_a(void*);
 void k_thread_b(void*);
@@ -25,7 +28,7 @@ int main(void) {
    put_int((uint32_t)addr);
    put_str("\n");
 */
-   intr_enable();	// 打开中断,使时钟中断起作用
+   //intr_enable();	// 打开中断,使时钟中断起作用
    //process_execute(u_prog_a, "u_prog_a");
    //process_execute(u_prog_b, "u_prog_b");
    //thread_start("k_thread_a", 31, k_thread_a, "I am thread_a");
@@ -34,6 +37,8 @@ int main(void) {
    //while(1) {
    //    console_put_str("Main ");
    //};
+
+/* test filesystem 
    struct stat obj_stat;
    sys_stat("/", &obj_stat);
    printf("/`s info\n   i_no:%d\n   size:%d\n   filetype:%s\n", \
@@ -43,10 +48,23 @@ int main(void) {
    printf("/dir1`s info\n   i_no:%d\n   size:%d\n   filetype:%s\n", \
 	 obj_stat.st_ino, obj_stat.st_size, \
 	 obj_stat.st_filetype == 2 ? "directory" : "regular");
+*/
 
-   put_str("[YunOS@localhost]$ \n");
+   cls_screen();
+   console_put_str("[YunOS@localhost]$ ");
    while(1);
    return 0;
+}
+
+
+void init(void) {
+   uint32_t ret_pid = fork();
+   if(ret_pid) {  // 父进程
+      while(1);
+   } else {	  // 子进程
+      my_shell();
+   }
+   panic("init: should not be here");
 }
 
 /* 在线程中运行的函数 */

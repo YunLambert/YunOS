@@ -12,6 +12,8 @@
 #include "memory.h"
 #include "file.h"
 #include "console.h"
+#include "keyboard.h"
+#include "ioqueue.h"
 
 struct partition* cur_part;	 // 默认情况下操作的是哪个分区
 
@@ -191,7 +193,7 @@ static void partition_format(struct partition* part) {
 }
 
 /* 将最上层路径名称解析出来 */
-static char* path_parse(char* pathname, char* name_store) {
+char* path_parse(char* pathname, char* name_store) {
    if (pathname[0] == '/') {   // 根目录不需要单独解析
     /* 路径中出现1个或多个连续的字符'/',将这些'/'跳过,如"///a/b" */
        while(*(++pathname) == '/');
@@ -405,13 +407,24 @@ int32_t sys_write(int32_t fd, const void* buf, uint32_t count) {
 
 /* 从文件描述符fd指向的文件中读取count个字节到buf,若成功则返回读出的字节数,到文件尾则返回-1 */
 int32_t sys_read(int32_t fd, void* buf, uint32_t count) {
-   if (fd < 0) {
-      printk("sys_read: fd error\n");
-      return -1;
-   }
    ASSERT(buf != NULL);
-   uint32_t _fd = fd_local2global(fd);
-   return file_read(&file_table[_fd], buf, count);   
+   int32_t ret = -1;
+   if (fd < 0 || fd == stdout_no || fd == stderr_no) {
+      printk("sys_read: fd error\n");
+   } else if (fd == stdin_no) {
+      char* buffer = buf;
+      uint32_t bytes_read = 0;
+      while (bytes_read < count) {
+	 *buffer = ioq_getchar(&kbd_buf);
+	 bytes_read++;
+	 buffer++;
+      }
+      ret = (bytes_read == 0 ? -1 : (int32_t)bytes_read);
+   } else {
+      uint32_t _fd = fd_local2global(fd);
+      ret = file_read(&file_table[_fd], buf, count);   
+   }
+   return ret;
 }
 
 /* 重置用于文件读写操作的偏移指针,成功时返回新的偏移量,出错时返回-1 */
@@ -667,9 +680,9 @@ int32_t sys_rmdir(const char* pathname) {
    /* 先检查待删除的文件是否存在 */
    struct path_search_record searched_record;
    memset(&searched_record, 0, sizeof(struct path_search_record));
-   int inode_no = search_file(pathname, &searched_record);
+   int32_t inode_no = search_file(pathname, &searched_record);
    ASSERT(inode_no != 0);
-   int retval = -1;	// 默认返回值
+   int32_t retval = -1;	// 默认返回值
    if (inode_no == -1) {
       printk("In %s, sub path %s not exist\n", pathname, searched_record.searched_path); 
    } else {
@@ -757,7 +770,6 @@ char* sys_getcwd(char* buf, uint32_t size) {
    if (io_buf == NULL) {
       return NULL;
    }
-
    struct task_struct* cur_thread = running_thread();
    int32_t parent_inode_nr = 0;
    int32_t child_inode_nr = cur_thread->cwd_inode_nr;
@@ -766,6 +778,7 @@ char* sys_getcwd(char* buf, uint32_t size) {
    if (child_inode_nr == 0) {
       buf[0] = '/';
       buf[1] = 0;
+      sys_free(io_buf);
       return buf;
    }
 
@@ -842,6 +855,11 @@ int32_t sys_stat(const char* path, struct stat* buf) {
    }
    dir_close(searched_record.parent_dir);
    return ret;
+}
+
+/* 向屏幕输出一个字符 */
+void sys_putchar(char char_asci) {
+   console_put_char(char_asci);
 }
 
 /* 在磁盘上搜索文件系统,若没有则格式化分区创建文件系统 */

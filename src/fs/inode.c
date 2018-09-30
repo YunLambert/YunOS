@@ -131,13 +131,12 @@ void inode_close(struct inode* inode) {
    enum intr_status old_status = intr_disable();
    if (--inode->i_open_cnts == 0) {
       list_remove(&inode->inode_tag);	  // 将I结点从part->open_inodes中去掉
-   /* inode_open时为实现inode被所有进程共享,
-    * 已经在sys_malloc为inode分配了内核空间,
-    * 释放inode时也要确保释放的是内核内存池 */
+
+   /* inode_open时为实现inode被所有进程共享,已经在sys_malloc为inode分配了内核空间 */
       struct task_struct* cur = running_thread();
       uint32_t* cur_pagedir_bak = cur->pgdir;
       cur->pgdir = NULL;
-      sys_free(inode);
+      sys_free(inode);		         // 释放inode的内核空间
       cur->pgdir = cur_pagedir_bak;
    }
    intr_set_status(old_status);

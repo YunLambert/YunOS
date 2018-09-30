@@ -104,7 +104,7 @@ static void general_intr_handler(uint8_t vec_nr) {
    if (vec_nr == 14) {	  // 若为Pagefault,将缺失的地址打印出来并悬停
       int page_fault_vaddr = 0; 
       asm ("movl %%cr2, %0" : "=r" (page_fault_vaddr));	  // cr2是存放造成page_fault的地址
-      put_str("\npage fault addr is ");put_int(page_fault_vaddr); 
+      put_str("\npage fault addr is 0x");put_int(page_fault_vaddr); 
    }
    put_str("\n!!!!!!!      excetion message end    !!!!!!!!\n");
   // 能进入中断处理程序就表示已经处在关中断情况下,
